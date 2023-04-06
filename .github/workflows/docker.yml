@@ -1,0 +1,67 @@
+name: Docker
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Get commit sha
+      uses: benjlevesque/short-sha@v2.1
+      id: metasha
+    - name: Setup qemu
+      uses: docker/setup-qemu-action@v2
+    - name: Setup buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Registry login
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Get metadata
+      id: metadata
+      uses: docker/metadata-action@v4
+      with:
+        images: |
+          ghcr.io/wescale-ctf/challenge-17
+        tags: |
+          type=sha,format=short
+    - name: Build and publish
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.metadata.outputs.tags }}
+        labels: ${{ steps.metadata.outputs.labels }}
+        build-args: |
+          WESCALE_FLAG=${{ secrets.WESCALE_FLAG }}
+          DOCKER_TOKEN=${{ secrets.DOCKER_TOKEN }}
+    - name: Vulnerability scan
+      if: github.event_name != 'pull_request'
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ghcr.io/wescale-ctf/challenge-17:sha-${{ steps.metasha.outputs.sha }}
+        format: 'json'
+        ignore-unfixed: 'false'
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
+      env:
+        TRIVY_USERNAME: ${{ github.actor }}
+        TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}

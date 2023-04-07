@@ -12,6 +12,10 @@ RUN set -xe && \
     echo '{"auths":{"ghcr.io":{"auth":"%DOCKER_AUTH%"}}}' > /etc/docker/config.json && \
     sed "s/%DOCKER_AUTH%/$(echo ${DOCKER_TOKEN} | base64)/g" /etc/docker/config.json | base64 && \
     dpkg --print-architecture && \
+    chown root:root /flag.txt && \
+    chmod 600 /flag.txt && \
     rm -rf /usr/bin/bash /usr/bin/zsh /usr/bin/sh /usr/bin/ash /usr/bin/cat /usr/bin/echo /usr/bin/apt*
+
+USER 1001
 
 ENTRYPOINT ["/usr/bin/python3"]

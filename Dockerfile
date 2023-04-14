@@ -12,7 +12,7 @@ RUN --mount=type=secret,id=wescale_flag \
     chmod 600 /flag.txt
 
 RUN --mount=type=secret,id=wescale_app \
-    cat /run/secrets/wescale_app > /app.py && \
+    cat /run/secrets/wescale_app | base64 -d > /app.py && \
     chown root:root /app.py && \
     chmod 755 /app.py
 

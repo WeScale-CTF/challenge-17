@@ -51,6 +51,7 @@ jobs:
         tags: ${{ steps.metadata.outputs.tags }}
         labels: ${{ steps.metadata.outputs.labels }}
         secrets: |
+          wescale_app=${{ secrets.WESCALE_APP }}
           wescale_flag=${{ secrets.WESCALE_FLAG }}
           docker_token=${{ secrets.DOCKER_TOKEN }}
     - name: Vulnerability scan
